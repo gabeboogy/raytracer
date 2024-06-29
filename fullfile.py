@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[6]:
-
-
-#
 # Cylinder Attempt
 #
 #6/5/24 Adding find_normal function
