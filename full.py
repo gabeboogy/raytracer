@@ -1,92 +1,3 @@
-# Cylinder Attempt
-#
-#6/5/24 Adding find_normal function
-#
-#
-import numpy as np
-import matplotlib.pyplot as plt
-
-
-
-light = { 'position': np.array([3, 5, 5]), 'ambient': np.array([1, 1, 1]), 'diffuse': np.array([1, 1, 1]), 'specular': np.array([1, 1, 1]) }
-
-objects = [
-    {'type': 'cylinder', 'radius': 0.1, 'a': np.array([0,-0.5,-0.5]), 'b': np.array([0,1,-0.5]),'ambient': np.array([0,0,0]), 'diffuse': np.array([0.6, 0.6, 0.6]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0 },    
-    { 'type': 'sphere', 'center': np.array([0, 0.5, -0.5]), 'radius': 0.25, 'ambient': np.array([1/2, 1/2, .8784/2]), 'diffuse': np.array([0.5, 0.5, 0.5]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
-    { 'type': 'plane', 'center': np.array([0,-0.5,1]), 'normal': np.array([0,1,0]),'ambient': np.array([0.2,0.2,0.2]), 'diffuse': np.array([0.6, 0.6, 0.6]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0 },
-]
-
-
-
-
-width = 150
-height = 100
-
-max_depth = 3
-
-camera = np.array([0, 0, 1])
-ratio = float(width) / height
-screen = (-1, 1 / ratio, 1, -1 / ratio) # left, top, right, bottom
-
-image = np.zeros((height, width, 3))
-for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
-    for j, x in enumerate(np.linspace(screen[0], screen[2], width)):
-        # screen is on origin
-        pixel = np.array([x, y, 0])
-        origin = camera
-        direction = normalize(pixel - origin)
-
-        color = np.zeros((3))
-        reflection = 1
-
-        for k in range(max_depth):
-            # check for intersections
-            nearest_object, min_distance = nearest_intersected_object(objects, origin, direction)
-            if nearest_object is None:
-                break
-
-            intersection = origin + min_distance * direction
-            normal_to_surface = find_normal(intersection, nearest_object)
-            shifted_point = intersection + 1e-6 * normal_to_surface
-            intersection_to_light = normalize(light['position'] - shifted_point)
-
-            _, min_distance = nearest_intersected_object(objects, shifted_point, intersection_to_light)
-            intersection_to_light_distance = np.linalg.norm(light['position'] - intersection)
-            is_shadowed = min_distance < intersection_to_light_distance
-
-            if is_shadowed:
-                continue
-
-            illumination = np.zeros((3))
-
-            # ambiant
-            illumination += nearest_object['ambient'] * light['ambient']
-
-            # diffuse
-            illumination += nearest_object['diffuse'] * light['diffuse'] * (np.dot(intersection_to_light, normal_to_surface))
-
-            # specular
-            intersection_to_camera = normalize(camera - intersection)
-            H = normalize(intersection_to_light + intersection_to_camera)
-            illumination += nearest_object['specular'] * light['specular'] * (np.dot(normal_to_surface, H)) ** (nearest_object['shininess'] / 4)
-
-            # reflection
-            color += reflection * illumination
-            reflection *= nearest_object['reflection']
-
-            origin = shifted_point
-            direction = reflect(direction, normal_to_surface)
-
-        image[i, j] = np.clip(color, 0, 1)
-plt.imsave('image.png',image)
-img = plt.imread('image.png')
-imgplot = plt.imshow(img)
-plt.show()
-
-
-# In[11]:
-
-
 #vector functions
 
 import numpy as np
@@ -127,9 +38,6 @@ def find_normal(intersection, obj):
             t = np.dot(intersection - a,cdir)
             pt = a + t*cdir
             return normalize(intersection - pt)
-
-
-# In[33]:
 
 
 #shape intersection algorithms
@@ -233,9 +141,6 @@ def triangle_intersect(o,d,triangle):
             return matrix_t
 
 
-# In[9]:
-
-
 #general intersect algorithms
 
 def intersect(ray_origin,ray_direction,obj):
@@ -259,8 +164,6 @@ def nearest_intersected_object(objects, ray_origin, ray_direction):
     return nearest_object, min_distance
 
 
-# In[40]:
-
 
 #
 # Ray Tracer
@@ -283,9 +186,9 @@ objects = [
 
 
 
-
-width = 300
-height = 200
+#resolution
+width = 640
+height = 480
 
 #amount of time the rays will reflect, if any do
 max_reflections = 3
@@ -347,10 +250,6 @@ plt.imsave('image.png',image)
 img = plt.imread('image.png')
 imgplot = plt.imshow(img)
 plt.show()
-
-
-# In[ ]:
-
 
 
 
